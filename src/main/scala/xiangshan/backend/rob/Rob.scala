@@ -112,7 +112,7 @@ class RobImp(override val wrapper: Rob)(implicit p: Parameters, params: BackendP
 
   val rab = Module(new RenameBuffer(RabSize))
   val vtypeBuffer = Module(new VTypeBuffer(VTypeBufferSize))
-  val bankNum = 8
+  val bankNum = 4
   assert(RobSize % bankNum == 0, "RobSize % bankNum must be 0")
   val robEntries = Reg(Vec(RobSize, new RobEntryBundle))
   // pointers
@@ -969,8 +969,8 @@ class RobImp(override val wrapper: Rob)(implicit p: Parameters, params: BackendP
     val vxsatRes = vxsatCanWbSeq.zip(vxsat_wb).map { case (canWb, wb) => Mux(canWb, wb.bits.vxsat.get, 0.U) }.fold(false.B)(_ | _)
     needUpdate(i).vxsat := Mux(!robBanksRdata(i).valid && instCanEnqFlag, 0.U, robBanksRdata(i).vxsat | vxsatRes)
   }
-  robBanksRdataThisLineUpdate := VecInit(needUpdate.take(8))
-  robBanksRdataNextLineUpdate := VecInit(needUpdate.drop(8))
+  robBanksRdataThisLineUpdate := VecInit(needUpdate.take(4)) //
+  robBanksRdataNextLineUpdate := VecInit(needUpdate.drop(4)) //
   // end update robBanksRdata
 
   // interrupt_safe

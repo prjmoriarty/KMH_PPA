@@ -32,7 +32,7 @@ import xiangshan.frontend._
 import firrtl.ir.Block
 
 case class ICacheParameters(
-    nSets: Int = 256,
+    nSets: Int = 128,
     nWays: Int = 4,
     rowBits: Int = 64,
     nTLBEntries: Int = 32,

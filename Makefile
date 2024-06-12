@@ -23,8 +23,8 @@ SIM_TOP = SimTop
 FPGATOP = top.TopMain
 SIMTOP  = top.SimTop
 
-TOP_V = $(RTL_DIR)/$(TOP).v
-SIM_TOP_V = $(RTL_DIR)/$(SIM_TOP).v
+TOP_V = $(RTL_DIR)/$(TOP).sv
+SIM_TOP_V = $(RTL_DIR)/$(SIM_TOP).sv
 
 SCALA_FILE = $(shell find ./src/main/scala -name '*.scala')
 TEST_FILE = $(shell find ./src/test/scala -name '*.scala')
@@ -45,12 +45,12 @@ else
 GOALS = $(MAKECMDGOALS)
 endif
 
-# common chisel args
+# common chisel args --split-verilog -o=build/rtl
 ifeq ($(MFC),1)
 CHISEL_VERSION = chisel
-FPGA_MEM_ARGS = --firtool-opt "--repl-seq-mem --repl-seq-mem-file=$(TOP).v.conf"
-SIM_MEM_ARGS = --firtool-opt "--repl-seq-mem --repl-seq-mem-file=$(SIM_TOP).v.conf"
-MFC_ARGS = --dump-fir --target verilog \
+FPGA_MEM_ARGS = --firtool-opt "--repl-seq-mem --repl-seq-mem-file=$(TOP).sv.conf"
+SIM_MEM_ARGS = --firtool-opt "--repl-seq-mem --repl-seq-mem-file=$(SIM_TOP).sv.conf"
+MFC_ARGS = --dump-fir --target systemverilog \
            --firtool-opt "-O=release --disable-annotation-unknown --lowering-options=explicitBitcast,disallowLocalVariables,disallowPortDeclSharing,locationInfoStyle=none"
 RELEASE_ARGS += $(MFC_ARGS)
 DEBUG_ARGS += $(MFC_ARGS)
@@ -141,7 +141,7 @@ $(TOP_V): $(SCALA_FILE)
 		-td $(@D) --config $(CONFIG) $(FPGA_MEM_ARGS)                    \
 		--num-cores $(NUM_CORES) $(RELEASE_ARGS)
 ifeq ($(MFC),1)
-	$(SPLIT_VERILOG) $(RTL_DIR) $(TOP).v
+	$(SPLIT_VERILOG) $(RTL_DIR) $(TOP).sv
 	$(MEM_GEN_SEP) "$(MEM_GEN)" "$(TOP_V).conf" "$(RTL_DIR)"
 endif
 	$(SED_CMD) $@
@@ -163,7 +163,7 @@ $(SIM_TOP_V): $(SCALA_FILE) $(TEST_FILE)
 		-td $(@D) --config $(CONFIG) $(SIM_MEM_ARGS)                          \
 		--num-cores $(NUM_CORES) $(SIM_ARGS) --full-stacktrace
 ifeq ($(MFC),1)
-	$(SPLIT_VERILOG) $(RTL_DIR) $(SIM_TOP).v
+	$(SPLIT_VERILOG) $(RTL_DIR) $(SIM_TOP).sv
 	$(MEM_GEN_SEP) "$(MEM_GEN)" "$(SIM_TOP_V).conf" "$(RTL_DIR)"
 endif
 	$(SED_CMD) $@

@@ -41,7 +41,7 @@ import xiangshan.mem.LqPtr
 case class DCacheParameters
 (
   nSets: Int = 128,
-  nWays: Int = 8,
+  nWays: Int = 4,
   rowBits: Int = 64,
   tagECC: Option[String] = None,
   dataECC: Option[String] = None,

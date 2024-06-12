@@ -377,8 +377,8 @@ class FuzzConfig(dummy: Int = 0) extends Config(
 
 class DefaultConfig(n: Int = 1) extends Config(
   new WithNKBL3(16 * 1024, inclusive = false, banks = 4, ways = 16)
-    ++ new WithNKBL2(2 * 512, inclusive = true, banks = 4)
-    ++ new WithNKBL1D(64, ways = 8)
+    ++ new WithNKBL2(2 * 128, inclusive = true, banks = 4)
+    ++ new WithNKBL1D(32, ways = 8)
     ++ new BaseConfig(n)
 )
 
@@ -391,7 +391,7 @@ class KunminghuV2Config(n: Int = 1) extends Config(
     ++ new Config((site, here, up) => {
       case SoCParamsKey => up(SoCParamsKey).copy(L3CacheParamsOpt = None) // There will be no L3
     })
-    ++ new WithNKBL2(2 * 512, inclusive = true, banks = 4, tp = false)
+    ++ new WithNKBL2(2 * 128, inclusive = true, banks = 4, tp = false)
     ++ new WithNKBL1D(64, ways = 8)
     ++ new BaseConfig(n)
 )
