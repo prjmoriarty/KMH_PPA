@@ -151,9 +151,9 @@ case class XSCoreParameters
   VecLogicRegs: Int = 32 + 1 + 15, // 15: tmp, 1: vconfig
   VCONFIG_IDX: Int = 32,
   NRPhyRegs: Int = 128,
-  VirtualLoadQueueSize: Int = 48,
-  LoadQueueRARSize: Int = 48,
-  LoadQueueRAWSize: Int = 48, // NOTE: make sure that LoadQueueRAWSize is power of 2.
+  VirtualLoadQueueSize: Int = 32,
+  LoadQueueRARSize: Int = 32,
+  LoadQueueRAWSize: Int = 32, // NOTE: make sure that LoadQueueRAWSize is power of 2.
   RollbackGroupSize: Int = 8,
   LoadQueueReplaySize: Int = 48,
   LoadUncacheBufferSize: Int = 16,
@@ -163,8 +163,8 @@ case class XSCoreParameters
   StoreQueueForwardWithMask: Boolean = true,
   VlsQueueSize: Int = 4,
   RobSize: Int = 160,
-  RabSize: Int = 128,
-  VTypeBufferSize: Int = 32, // used to reorder vtype
+  RabSize: Int = 96,
+  VTypeBufferSize: Int = 16, // used to reorder vtype
   IssueQueueSize: Int = 16,
   IssueQueueCompEntrySize: Int = 12,
   dpParams: DispatchParameters = DispatchParameters(
@@ -205,8 +205,8 @@ case class XSCoreParameters
   EnsbufferWidth: Int = 2,
   LoadDependencyWidth: Int = 2,
   // ============ VLSU ============
-  VlMergeBufferSize: Int = 8,
-  VsMergeBufferSize: Int = 8,
+  VlMergeBufferSize: Int = 4,
+  VsMergeBufferSize: Int = 4,
   UopWritebackWidth: Int = 2,
   VLUopWritebackWidth: Int = 2,
   VSUopWritebackWidth: Int = 1,
@@ -312,7 +312,7 @@ case class XSCoreParameters
     tagECC = Some("secded"),
     dataECC = Some("secded"),
     replacer = Some("setplru"),
-    nMissEntries = 16,
+    nMissEntries = 12,
     nProbeEntries = 8,
     nReleaseEntries = 18,
     nMaxPrefetchEntry = 6,

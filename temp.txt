@@ -1,0 +1,24 @@
+emu compiled at Jun 20 2024, 05:30:14
+Using simulated 32768B flash
+Using simulated 8192MB RAM
+The image is /home/xugang/hdd/xg/Kunminghu/XiangShan/ready-to-run/coremark-2-iteration.bin
+DRAMsim3 memory system initialized.
+Running CoreMark for 2 iterations
+2K performance run parameters for coremark.
+CoreMark Size    : 666
+Total time (ms)  : 3272
+Iterations       : 2
+Compiler version : GCC10.2.0
+seedcrc          : 0xe9f5
+[0]crclist       : 0xe714
+[0]crcmatrix     : 0x1fd7
+[0]crcstate      : 0x8e3a
+[0]crcfinal      : 0x72be
+Finised in 3272 ms.
+==================================================
+CoreMark Iterations/Sec 611
+Core 0: [32mHIT GOOD TRAP at pc = 0x800026ba
+[0m[35mCore-0 instrCnt = 626,872, cycleCnt = 385,101, IPC = 1.627812
+[0m[34mSeed=0 Guest cycle spent: 385,106 (this will be different from cycleCnt if emu loads a snapshot)
+[0m[34mHost time spent: 988,251ms
+[0m
