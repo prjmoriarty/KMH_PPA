@@ -583,6 +583,54 @@ class CtrlBlockImp(
     }
   }
 
+  // Topdown
+  val frontendStall = PopCount( rename.io.in map { ren => !(ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) &&  ren.ready })
+  val backendStall  = PopCount( rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready })
+  val bidirectStall = PopCount( rename.io.in map { ren => !(ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready })
+  val opSpec        = PopCount( rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) &&  ren.ready })
+  XSPerfAccumulate("Topdown_Frontend_Stall", frontendStall + bidirectStall)
+  XSPerfAccumulate("Topdown_Backend_Stall", backendStall)
+  XSPerfAccumulate("Topdown_Stall", frontendStall + backendStall + bidirectStall)
+  XSPerfAccumulate("Topdown_Op_spec", opSpec)
+
+  val AllDqCanAccept = intDq0.io.enq.canAccept && intDq1.io.enq.canAccept && fpDq.io.enq.canAccept && lsDq.io.enq.canAccept
+  val AllFlCanAccept = rename.io.intFlCanAccept && rename.io.fpFlCanAccept
+  val intDqCanAccept = intDq0.io.enq.canAccept && intDq1.io.enq.canAccept
+
+  val backendRobStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && AllDqCanAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk }) )
+  val backendWalkStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && AllDqCanAccept && AllFlCanAccept && rename.io.rabCommits.isWalk }) )
+  val backendIntFlStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && AllDqCanAccept && !rename.io.intFlCanAccept && rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendFpFlStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && AllDqCanAccept && rename.io.intFlCanAccept && !rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendIntDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && !intDqCanAccept && fpDq.io.enq.canAccept && lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendFpDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && intDqCanAccept && !fpDq.io.enq.canAccept && lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendLsDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && intDqCanAccept && fpDq.io.enq.canAccept && !lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendintFlAndRobStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && AllDqCanAccept && !rename.io.intFlCanAccept && rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendfpFlAndRobStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && AllDqCanAccept && rename.io.intFlCanAccept && !rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendintDqAndintFlStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && !intDqCanAccept && fpDq.io.enq.canAccept && lsDq.io.enq.canAccept && !rename.io.intFlCanAccept && rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendlsDqAndintFlStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && intDqCanAccept && fpDq.io.enq.canAccept && !lsDq.io.enq.canAccept && !rename.io.intFlCanAccept && rename.io.intFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendRobAndintDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && !intDqCanAccept && fpDq.io.enq.canAccept && lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendRobAndlsDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && intDqCanAccept && fpDq.io.enq.canAccept && !lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendRobAndfpDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && intDqCanAccept && !fpDq.io.enq.canAccept && lsDq.io.enq.canAccept&& AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendRobAndintlsDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && !rename.io.enqRob.canAccept && !intDqCanAccept && fpDq.io.enq.canAccept && !lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  val backendintAndlsDqStall = PopCount( (rename.io.in map { ren =>  (ren.valid || CommitType.isFused(ren.bits.ctrl.commitType)) && !ren.ready && rename.io.enqRob.canAccept && !intDqCanAccept && fpDq.io.enq.canAccept && !lsDq.io.enq.canAccept && AllFlCanAccept && !rename.io.rabCommits.isWalk})  )
+  XSPerfAccumulate("TopdownL2Backend_Stall", backendRobStall + backendWalkStall + backendIntFlStall + backendFpFlStall + backendIntDqStall + backendFpDqStall + backendLsDqStall + backendintFlAndRobStall + backendfpFlAndRobStall + backendintAndlsDqStall + backendRobAndintDqStall + backendRobAndfpDqStall + backendRobAndlsDqStall + backendintDqAndintFlStall + backendlsDqAndintFlStall + backendintAndlsDqStall + backendRobAndintDqStall + backendRobAndlsDqStall + backendRobAndintlsDqStall)
+  XSPerfAccumulate("TopdownL2Backend_RobStall", backendRobStall)
+  XSPerfAccumulate("TopdownL2Backend_WalkStall", backendWalkStall)
+  XSPerfAccumulate("TopdownL2Backend_IntFlStall", backendIntFlStall)
+  XSPerfAccumulate("TopdownL2Backend_FpFlStall", backendFpFlStall)
+  XSPerfAccumulate("TopdownL2Backend_IntDqStall", backendIntDqStall)
+  XSPerfAccumulate("TopdownL2Backend_FpDqStall", backendFpDqStall)
+  XSPerfAccumulate("TopdownL2Backend_LsDqStall", backendLsDqStall)
+  XSPerfAccumulate("TopdownL2Backend_IntFlAndRobStall", backendintFlAndRobStall)
+  XSPerfAccumulate("TopdownL2Backend_FpFlAndRobStall", backendfpFlAndRobStall)
+  XSPerfAccumulate("TopdownL2Backend_IntDqAndintFlStall", backendintDqAndintFlStall)
+  XSPerfAccumulate("TopdownL2Backend_LsDqAndintFlStall", backendlsDqAndintFlStall)
+  XSPerfAccumulate("TopdownL2Backend_IntAndlsDqStall", backendintAndlsDqStall)
+  XSPerfAccumulate("TopdownL2Backend_RobAndintDqStall", backendRobAndintDqStall)
+  XSPerfAccumulate("TopdownL2Backend_RobAndlsDqStall", backendRobAndlsDqStall)
+  XSPerfAccumulate("TopdownL2Backend_RobAndfpDqStall", backendRobAndfpDqStall)
+  XSPerfAccumulate("TopdownL2Backend_RobAndintlsDqStall", backendRobAndintlsDqStall)
+
   val allPerfInc = allPerfEvents.map(_._2.asTypeOf(new PerfEvent))
   val perfEvents = HPerfMonitor(csrevents, allPerfInc).getPerfEvents
   generatePerfEvent()

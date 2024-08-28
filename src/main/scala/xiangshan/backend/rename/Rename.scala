@@ -76,6 +76,8 @@ class Rename(implicit p: Parameters) extends XSModule with HasCircularQueuePtrHe
       val in = Flipped(new StallReasonIO(RenameWidth))
       val out = new StallReasonIO(RenameWidth)
     }
+    val intFlCanAccept = Output(Bool())
+    val fpFlCanAccept = Output(Bool())
   })
 
   // io alias
@@ -93,6 +95,9 @@ class Rename(implicit p: Parameters) extends XSModule with HasCircularQueuePtrHe
   fpFreeList.io.debug_rat.foreach(_ <> io.debug_fp_rat.get)
   vecFreeList.io.commit    <> io.rabCommits
   vecFreeList.io.debug_rat.foreach(_ <> io.debug_vec_rat.get)
+
+  io.intFlCanAccept := intFreeList.io.canAllocate
+  io.fpFlCanAccept := fpFreeList.io.canAllocate
 
   // decide if given instruction needs allocating a new physical register (CfCtrl: from decode; RobCommitInfo: from rob)
   def needDestReg[T <: DecodedInst](reg_t: RegType, x: T): Bool = reg_t match {
