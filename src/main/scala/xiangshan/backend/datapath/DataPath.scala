@@ -42,6 +42,18 @@ class DataPathImp(override val wrapper: DataPath)(implicit p: Parameters, params
   private val (fromMemIQ, toMemIQ, toMemExu) = (io.fromMemIQ, io.toMemIQ, io.toMemExu)
   private val (fromVfIQ , toVfIQ , toVfExu ) = (io.fromVfIQ , io.toVfIQ , io.toVecExu)
 
+  dontTouch(io.fromIntIQ)
+  dontTouch(io.toIntExu)
+
+  dontTouch(io.fromMemIQ)
+  dontTouch(io.toMemExu)
+
+  dontTouch(fromIntIQ)
+  dontTouch(toIntExu)
+
+  dontTouch(fromMemIQ)
+  dontTouch(toMemExu)
+
   println(s"[DataPath] IntIQ(${fromIntIQ.size}), MemIQ(${fromFpIQ.size}), MemIQ(${fromMemIQ.size})")
   println(s"[DataPath] IntExu(${fromIntIQ.map(_.size).sum}), FpExu(${fromFpIQ.map(_.size).sum}), MemExu(${fromMemIQ.map(_.size).sum})")
 

@@ -4,6 +4,7 @@ import org.chipsalliance.cde.config.Parameters
 import chisel3._
 import chisel3.util._
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
+import utility.{GTimer}
 import utils.OptionWrapper
 import xiangshan._
 import xiangshan.backend.Bundles._
@@ -290,6 +291,10 @@ abstract class SchedulerImpBase(wrapper: Scheduler)(implicit params: SchdBlockPa
     toDpDy <> issueQueues(i).io.deqDelay
   }
 
+  if(backendParams.debugEn) {
+    dontTouch(io.toDataPathAfterDelay)
+  }
+
   // Response
   issueQueues.zipWithIndex.foreach { case (iq, i) =>
     iq.io.og0Resp.zipWithIndex.foreach { case (og0Resp, j) =>
@@ -340,9 +345,12 @@ class SchedulerArithImp(override val wrapper: Scheduler)(implicit params: SchdBl
     s"has intBusyTable: ${intBusyTable.nonEmpty}, " +
     s"has vfBusyTable: ${vfBusyTable.nonEmpty}")
 
+  val timer = GTimer()
   issueQueues.zipWithIndex.foreach { case (iq, i) =>
     iq.io.flush <> io.fromCtrlBlock.flush
     iq.io.enq <> dispatch2Iq.io.out(i)
+    iq.io.enq(0).bits.debugInfo.enqRsTime := timer + 1.U
+    iq.io.enq(1).bits.debugInfo.enqRsTime := timer + 1.U
     val intWBIQ = params.schdType match {
       case IntScheduler() => wakeupFromIntWBVec.zipWithIndex.filter(x => iq.params.needWakeupFromIntWBPort.keys.toSeq.contains(x._2)).map(_._1)
       case FpScheduler() => wakeupFromFpWBVec.zipWithIndex.filter(x => iq.params.needWakeupFromFpWBPort.keys.toSeq.contains(x._2)).map(_._1)
@@ -381,10 +389,13 @@ class SchedulerMemImp(override val wrapper: Scheduler)(implicit params: SchdBloc
   private val loadWakeUp = issueQueues.filter(_.params.LdExuCnt > 0).map(_.asInstanceOf[IssueQueueMemAddrImp].io.memIO.get.loadWakeUp).flatten
   require(loadWakeUp.length == io.fromMem.get.wakeup.length)
   loadWakeUp.zip(io.fromMem.get.wakeup).foreach(x => x._1 := x._2)
-
+  
+  val timer = GTimer()
   memAddrIQs.zipWithIndex.foreach { case (iq, i) =>
     iq.io.flush <> io.fromCtrlBlock.flush
     iq.io.enq <> dispatch2Iq.io.out(i)
+    iq.io.enq(0).bits.debugInfo.enqRsTime := timer + 1.U
+    iq.io.enq(1).bits.debugInfo.enqRsTime := timer + 1.U
     iq.io.wakeupFromWB.zip(
       wakeupFromIntWBVec.zipWithIndex.filter(x => iq.params.needWakeupFromIntWBPort.keys.toSeq.contains(x._2)).map(_._1) ++
       wakeupFromFpWBVec.zipWithIndex.filter(x => iq.params.needWakeupFromFpWBPort.keys.toSeq.contains(x._2)).map(_._1) ++

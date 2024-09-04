@@ -5,7 +5,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.decode._
 import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
-import utility.{Constantin, SelectOne}
+import utility.{Constantin, SelectOne, GTimer}
 import utils._
 import xiangshan._
 import xiangshan.backend.fu.{FuConfig, FuType}
@@ -577,6 +577,7 @@ class Dispatch2IqArithImp(override val wrapper: Dispatch2Iq)(implicit p: Paramet
     val finalSelIdxOH: UInt = PriorityMux(selSeq.map(_.valid).toSeq, selSeq.map(_.bits).toSeq)
     outs(portId).valid := selSeq.map(_.valid).reduce(_ | _)
     outs(portId).bits := Mux1H(finalSelIdxOH, uopsIn.map(_.bits))
+    outs(portId).bits.debugInfo.enqRsTime := GTimer() + 1.U
     when(outs(portId).valid) {
       outReadyMatrix(portId).zipWithIndex.foreach { case (inReady, i) =>
         when(finalSelIdxOH(i)) {
@@ -1099,6 +1100,7 @@ class Dispatch2IqMemImp(override val wrapper: Dispatch2Iq)(implicit p: Parameter
   deqMapEnqMatrix.zipWithIndex.foreach { case (deqOH, deqIdx) =>
     outs(deqIdx).valid := (deqOH.asUInt & allowDispatch.asUInt).orR && lsqCanAccept
     outs(deqIdx).bits := Mux1H(deqOH, uopsIn.map(_.bits))
+    outs(deqIdx).bits.debugInfo.enqRsTime := GTimer() + 1.U
   }
 
   uopsIn <> io.in
